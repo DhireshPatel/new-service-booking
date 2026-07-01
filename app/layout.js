@@ -32,6 +32,7 @@ import { CartProvider } from "@/context/CartContext";
 import { Toaster } from "react-hot-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { LocationProvider } from "@/context/LocationContext";
 
 export const metadata = {
   title:
@@ -45,23 +46,25 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className="font-body antialiased">
         <CartProvider>
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              style: {
-                background: "#0F172A",
-                color: "#fff",
-                fontSize: "14px",
-                borderRadius: "10px",
-              },
-              success: {
-                iconTheme: { primary: "#FFA800", secondary: "#0F172A" },
-              },
-            }}
-          />
-          <Navbar />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
+          <LocationProvider>
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                style: {
+                  background: "#0F172A",
+                  color: "#fff",
+                  fontSize: "14px",
+                  borderRadius: "10px",
+                },
+                success: {
+                  iconTheme: { primary: "#FFA800", secondary: "#0F172A" },
+                },
+              }}
+            />
+            <Navbar />
+            <main className="min-h-screen">{children}</main>
+            <Footer />
+          </LocationProvider>
         </CartProvider>
       </body>
     </html>

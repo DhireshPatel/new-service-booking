@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocation } from "@/context/LocationContext";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -13,6 +14,7 @@ const links = [
 ];
 
 export default function Navbar() {
+  const { location, loading } = useLocation();
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { cartCount } = useCart();
@@ -107,6 +109,13 @@ export default function Navbar() {
           </Link>
         </nav>
       )}
+
+      {/* here we add this for location->  */}
+      {loading
+        ? "Loading..."
+        : location
+          ? `${location.latitude} ${location.longitude}`
+          : "Location not found"}
     </header>
   );
 }

@@ -1,0 +1,1 @@
+//Yaha helper functions rahenge.
