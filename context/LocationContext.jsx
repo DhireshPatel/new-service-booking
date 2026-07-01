@@ -20,9 +20,13 @@ export const LocationProvider = ({ children }) => {
 
     // Agar location pehle se saved hai
     if (savedLocation) {
-      setLocation(JSON.parse(savedLocation));
-      setLoading(false);
-      return;
+      try {
+        setLocation(JSON.parse(savedLocation));
+        setLoading(false);
+        return;
+      } catch {
+        localStorage.removeItem("userLocation");
+      }
     }
 
     // Browser support check
@@ -37,11 +41,16 @@ export const LocationProvider = ({ children }) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
 
+        console.log("Latitude:", lat);
+        console.log("Longitude:", lng);
+        console.log("Accuracy:", position.coords.accuracy);
+
         const address = await reverseGeocode(lat, lng);
 
         const userLocation = {
           latitude: lat,
           longitude: lng,
+          accuracy: position.coords.accuracy,
           city: address.city,
           state: address.state,
           pincode: address.pincode,
@@ -54,14 +63,41 @@ export const LocationProvider = ({ children }) => {
         setLoading(false);
       },
       (error) => {
-        console.log(error);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            alert("Location permission denied.");
+            break;
+
+          case error.POSITION_UNAVAILABLE:
+            alert("Location unavailable.");
+            break;
+
+          case error.TIMEOUT:
+            alert("Location request timed out.");
+            break;
+
+          default:
+            alert("Unable to fetch location.");
+        }
         setLoading(false);
       },
       {
         enableHighAccuracy: true,
         timeout: 10000,
+        maximumAge: 0,
       },
     );
+  };
+
+  const updateLocation = (newLocation) => {
+    localStorage.setItem("userLocation", JSON.stringify(newLocation));
+
+    setLocation(newLocation);
+  };
+
+  const refreshLocation = () => {
+    localStorage.removeItem("userLocation");
+    getUserLocation();
   };
 
   return (
@@ -69,6 +105,9 @@ export const LocationProvider = ({ children }) => {
       value={{
         location,
         loading,
+        getUserLocation,
+        updateLocation,
+        refreshLocation,
       }}
     >
       {children}
