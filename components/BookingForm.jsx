@@ -47,7 +47,8 @@ function validate(values) {
     }
   }
 
-  if (!values.preferredTime) errors.preferredTime = "Please select a preferred time slot.";
+  if (!values.preferredTime)
+    errors.preferredTime = "Please select a preferred time slot.";
 
   return errors;
 }
@@ -62,7 +63,8 @@ const timeSlots = [
 
 export default function BookingForm({ disabled }) {
   const router = useRouter();
-  const { clearCart } = useCart();
+  // const { clearCart } = useCart();
+  const { items, total, clearCart } = useCart();
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -73,7 +75,7 @@ export default function BookingForm({ disabled }) {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (disabled) {
@@ -90,29 +92,74 @@ export default function BookingForm({ disabled }) {
     }
 
     setSubmitting(true);
-    const bookingId = generateBookingId();
 
-    // Simulate a brief submission delay for a real-world feel.
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/booking", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          full_name: values.fullName,
+          mobile: values.mobile,
+          email: values.email,
+          city: values.city,
+          address: values.address,
+          service_date: values.serviceDate,
+          preferred_time: values.preferredTime,
+          notes: values.notes,
+
+          services: items,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Booking failed");
+      }
+
+      toast.success("Booking Confirmed!");
+
+      const bookingId = generateBookingId();
+
       clearCart();
+
+      router.push(
+        `/booking-success?id=${bookingId}&name=${encodeURIComponent(values.fullName)}`,
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "Something went wrong");
+    } finally {
       setSubmitting(false);
-      router.push(`/booking-success?id=${bookingId}&name=${encodeURIComponent(values.fullName)}`);
-    }, 700);
+    }
   };
 
   const inputClass = (field) =>
     `focus-ring w-full rounded-xl border px-4 py-3 text-sm text-ink-900 placeholder:text-ink-500/60 transition-colors ${
-      errors[field] ? "border-red-400 bg-red-50/40" : "border-ink-900/10 bg-white focus:border-volt-400"
+      errors[field]
+        ? "border-red-400 bg-red-50/40"
+        : "border-ink-900/10 bg-white focus:border-volt-400"
     }`;
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-ink-900/5 bg-white p-6 shadow-card">
-      <h3 className="font-display text-base font-bold text-ink-900">Booking Details</h3>
-      <p className="mt-1 text-sm text-ink-500">Tell us where and when to send the technician.</p>
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-2xl border border-ink-900/5 bg-white p-6 shadow-card"
+    >
+      <h3 className="font-display text-base font-bold text-ink-900">
+        Booking Details
+      </h3>
+      <p className="mt-1 text-sm text-ink-500">
+        Tell us where and when to send the technician.
+      </p>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-ink-700">Full Name</label>
+          <label className="mb-1.5 block text-xs font-semibold text-ink-700">
+            Full Name
+          </label>
           <input
             name="fullName"
             value={values.fullName}
@@ -120,11 +167,15 @@ export default function BookingForm({ disabled }) {
             placeholder="e.g. Priya Mehta"
             className={inputClass("fullName")}
           />
-          {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
+          {errors.fullName && (
+            <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>
+          )}
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-ink-700">Mobile Number</label>
+          <label className="mb-1.5 block text-xs font-semibold text-ink-700">
+            Mobile Number
+          </label>
           <input
             name="mobile"
             value={values.mobile}
@@ -134,11 +185,15 @@ export default function BookingForm({ disabled }) {
             maxLength={10}
             className={inputClass("mobile")}
           />
-          {errors.mobile && <p className="mt-1 text-xs text-red-500">{errors.mobile}</p>}
+          {errors.mobile && (
+            <p className="mt-1 text-xs text-red-500">{errors.mobile}</p>
+          )}
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-ink-700">Email</label>
+          <label className="mb-1.5 block text-xs font-semibold text-ink-700">
+            Email
+          </label>
           <input
             name="email"
             type="email"
@@ -147,11 +202,15 @@ export default function BookingForm({ disabled }) {
             placeholder="you@example.com"
             className={inputClass("email")}
           />
-          {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
+          {errors.email && (
+            <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+          )}
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-ink-700">City</label>
+          <label className="mb-1.5 block text-xs font-semibold text-ink-700">
+            City
+          </label>
           <input
             name="city"
             value={values.city}
@@ -159,11 +218,15 @@ export default function BookingForm({ disabled }) {
             placeholder="e.g. Jodhpur"
             className={inputClass("city")}
           />
-          {errors.city && <p className="mt-1 text-xs text-red-500">{errors.city}</p>}
+          {errors.city && (
+            <p className="mt-1 text-xs text-red-500">{errors.city}</p>
+          )}
         </div>
 
         <div className="sm:col-span-2">
-          <label className="mb-1.5 block text-xs font-semibold text-ink-700">Address</label>
+          <label className="mb-1.5 block text-xs font-semibold text-ink-700">
+            Address
+          </label>
           <input
             name="address"
             value={values.address}
@@ -171,11 +234,15 @@ export default function BookingForm({ disabled }) {
             placeholder="House no., street, landmark"
             className={inputClass("address")}
           />
-          {errors.address && <p className="mt-1 text-xs text-red-500">{errors.address}</p>}
+          {errors.address && (
+            <p className="mt-1 text-xs text-red-500">{errors.address}</p>
+          )}
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-ink-700">Service Date</label>
+          <label className="mb-1.5 block text-xs font-semibold text-ink-700">
+            Service Date
+          </label>
           <input
             name="serviceDate"
             type="date"
@@ -183,11 +250,15 @@ export default function BookingForm({ disabled }) {
             onChange={handleChange}
             className={inputClass("serviceDate")}
           />
-          {errors.serviceDate && <p className="mt-1 text-xs text-red-500">{errors.serviceDate}</p>}
+          {errors.serviceDate && (
+            <p className="mt-1 text-xs text-red-500">{errors.serviceDate}</p>
+          )}
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-semibold text-ink-700">Preferred Time</label>
+          <label className="mb-1.5 block text-xs font-semibold text-ink-700">
+            Preferred Time
+          </label>
           <select
             name="preferredTime"
             value={values.preferredTime}
@@ -201,11 +272,15 @@ export default function BookingForm({ disabled }) {
               </option>
             ))}
           </select>
-          {errors.preferredTime && <p className="mt-1 text-xs text-red-500">{errors.preferredTime}</p>}
+          {errors.preferredTime && (
+            <p className="mt-1 text-xs text-red-500">{errors.preferredTime}</p>
+          )}
         </div>
 
         <div className="sm:col-span-2">
-          <label className="mb-1.5 block text-xs font-semibold text-ink-700">Additional Notes (optional)</label>
+          <label className="mb-1.5 block text-xs font-semibold text-ink-700">
+            Additional Notes (optional)
+          </label>
           <textarea
             name="notes"
             value={values.notes}
